@@ -77,7 +77,6 @@ class WhatsAppAutomation:
         free_click.click()
     
     def change_phone_number(self):
-
         wait = WebDriverWait(self.driver, 10)
         self.send_mesage('Yeni telefon numarasını giriniz. \n')
         time.sleep(10)  # Yeni mesajın gelmesini beklemek için kısa bir duraklama
@@ -99,6 +98,21 @@ class WhatsAppAutomation:
             else:
                 print("Hata: Yeni telefon numarası bekleniyor ancak 'change number' mesajı tekrar algılandı.")
 
+    def send_GIF(self):
+        GIF_keyword = "9/11"
+        wait = WebDriverWait(self.driver, 20)
+        sticker_button = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="main"]/footer/div[1]/div/span/div/div[2]/div[1]/div[1]/button/span')))
+        sticker_button.click()
+        GIF_button = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="expressions-panel-container"]/span/div/ul/div[2]/div/div/div[2]/button')))
+        GIF_button.click()
+        GIF_search_area = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="expressions-panel-container"]/span/div/ul/div[1]/div[2]/div[2]/div[1]/label/div/input')))
+        GIF_search_area.click()
+        GIF_search_area.send_keys(GIF_keyword)
+        GIF_search_area.send_keys(Keys.ENTER)
+        GIF_selected = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="expressions-panel-container"]/span/div/ul/div[1]/div[2]/div[2]/div[2]/div/div/div[1]/div[1]/div/div/img')))
+        GIF_selected.click()
+        send_button = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div[3]/div/div[2]/div[2]/span/div/div/div/div[2]/div/div[2]/div[2]/div/div')))
+        send_button.click()
 
 
     def start(self):
@@ -153,13 +167,14 @@ class WhatsAppAutomation:
                         self.save_note_to_file()
                     
                     elif self.last_message.lower() == "send gif":
-                        pass
+                        self.send_GIF()
+                        self.send_mesage("oki doki \n")
 
                     elif self.last_message.lower() == "change number":
                         self.change_phone_number()
 
                     else:
-                        time.sleep(10)
+                        time.sleep(5)
 
                 else:
                     time.sleep(5)
