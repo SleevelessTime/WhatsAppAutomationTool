@@ -18,6 +18,7 @@ from selenium.webdriver.support.ui import Select
 from selenium.webdriver.chrome.service import Service
 from bs4 import BeautifulSoup
 from datetime import datetime
+#from gif_processing import
 import time
 
  
@@ -34,7 +35,10 @@ class WhatsAppAutomation:
             "1. **exit**  - Programı sonlandırır.\n"
             "2. **help**  - Bu yardım mesajını görüntüler.\n"
             "3. **not** - not modu açma.\n"
-            "4. **not bitti** - not modu kapatma.\n")                                                                                                                                        # Yardım mesajı
+            "4. **not bitti** - not modu kapatma.\n"
+            "5. **send gif** - Gif gönderme modu açma.\n"
+            "6. **change number** - Sohbet edilen kişiyi değiştirme.\n "
+            )                                                                                                                                        # Yardım mesajı
         self.user_details=""                                                                                                                                                                 # Ulaşmak istediğimiz kişi adı 
 
     def save_note_to_file(self, filename="Note.txt"):                                                                                                                                        # Not alma fonksiyonu
@@ -72,6 +76,31 @@ class WhatsAppAutomation:
         free_click=wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="main"]/div[3]/div/div[2]/div[3]')))
         free_click.click()
     
+    def change_phone_number(self):
+
+        wait = WebDriverWait(self.driver, 10)
+        self.send_mesage('Yeni telefon numarasını giriniz. \n')
+        time.sleep(10)  # Yeni mesajın gelmesini beklemek için kısa bir duraklama
+
+        html_source = self.driver.page_source
+        soup = BeautifulSoup(html_source, 'html.parser')
+        message = soup.find_all('span', class_='_ao3e selectable-text copyable-text')  # Gelen mesajları bul
+
+        if message:
+            new_number_message = message[-1].text  # Son gelen mesajı al
+            if new_number_message != "change number":  # Gelen mesajın komut olmadığını kontrol et
+                chat_list_area = wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="side"]/div[1]/div/div[2]/div[2]/div/div/p')))
+                chat_list_area.click()
+                chat_list_area.send_keys(Keys.CONTROL + "a")
+                chat_list_area.send_keys(Keys.BACKSPACE)
+                chat_list_area.send_keys(new_number_message)
+                chat_list_area.send_keys(Keys.ENTER)
+                print("Telefon numarası değiştirildi:", new_number_message)
+            else:
+                print("Hata: Yeni telefon numarası bekleniyor ancak 'change number' mesajı tekrar algılandı.")
+
+
+
     def start(self):
         self.driver.get("https://web.whatsapp.com/")
 
@@ -122,6 +151,12 @@ class WhatsAppAutomation:
 
                     elif self.last_message.lower() == "not":                                                                                                                                 # Kullanıcı notlarını tutması için not metodu ekledik.
                         self.save_note_to_file()
+                    
+                    elif self.last_message.lower() == "send gif":
+                        pass
+
+                    elif self.last_message.lower() == "change number":
+                        self.change_phone_number()
 
                     else:
                         time.sleep(10)
