@@ -20,10 +20,17 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 import time
 
- 
+
 class WhatsAppAutomation:
- 
+
     def __init__(self):
+        self.response_dict={
+            "merhaba":"Merhaba! Sana nasıl yardımcı olabilirim? \n",
+            "nasılsın":"İyiyim, teşekkür ederim! siz nasılsınız. \n",
+            "teşekkürler":"Rica ederim! Yardım edebileceğim başka bir şey var mı? \n",
+            "iyi misin": "Saçma sapan konuşma la. \n",
+            "o kim şekerim": "o da benim şekerim \n"
+        }
         self.service = Service("C:/tools/chromedriver-win64/chromedriver.exe")                                                                                                               # Chrome Driverın yolunu verdiğimiz yer.
         self.driver = webdriver.Chrome(service=self.service)
         self.last_message = None                                                                                                                                                             # Son mesajı saklamak için değişken.
@@ -38,19 +45,19 @@ class WhatsAppAutomation:
             "5. *gif* - Gif gönderme modu açma.\n"
             "6. *change chat* - Sohbet edilen kişiyi değiştirme.\n "
             )                                                                                                                                                                                # Yardım mesajı
-        self.user_details=""                                                                                                                                                                 # Ulaşmak istediğimiz kişi adı 
+        self.user_details=""                                                                                                                                                                 # Ulaşmak istediğimiz kişi adı
 
     def save_note_to_file(self, filename="Note.txt"):                                                                                                                                        # Not alma fonksiyonu
         """
-        Bu fonksiyon, WhatsApp Web'deki mesajları takip ederek "Not bitti" mesajına kadar 
-        belirtilen dosyaya (varsayılan olarak "Note.txt") kaydeder. Yeni mesajları 
-        tekrar kaydetmemek için kontrol yapar. 
-        
-        Mesajları HTML kaynak kodundan alır, analiz eder ve sırayla dosyaya yazar. 
+        Bu fonksiyon, WhatsApp Web'deki mesajları takip ederek "Not bitti" mesajına kadar
+        belirtilen dosyaya (varsayılan olarak "Note.txt") kaydeder. Yeni mesajları
+        tekrar kaydetmemek için kontrol yapar.
+
+        Mesajları HTML kaynak kodundan alır, analiz eder ve sırayla dosyaya yazar.
         "Not bitti" mesajı algılandığında işlem sonlanır. Hata durumunda işlem durdurulur.
         """
         with open(filename,"a",encoding="utf8") as file:
-            
+
             while True:
                 try:
                     html_source = self.driver.page_source                                                                                                                                    # HTML kaynağını al
@@ -74,8 +81,8 @@ class WhatsAppAutomation:
 
     def send_mesage(self,message):                                                                                                                                                           # Kullanıcıya yollamak istediğimiz mesajlar için fonksiyon
         """
-        Bu fonksiyon, WhatsApp Web'de belirli bir kullanıcıya mesaj göndermek için kullanılır. 
-        1. Mesaj kutusu bulunur ve mesaj (`message`) yazılır. 
+        Bu fonksiyon, WhatsApp Web'de belirli bir kullanıcıya mesaj göndermek için kullanılır.
+        1. Mesaj kutusu bulunur ve mesaj (`message`) yazılır.
         2. Mesaj kutusu dışındaki bir alana tıklanarak mesaj gönderilir.
         XPATH değerleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.
         """
@@ -87,12 +94,16 @@ class WhatsAppAutomation:
 
         free_click=wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="main"]/div[3]/div/div[2]/div[3]')))
         free_click.click()
-    
+
+    def auto_reply(self,message):
+        response = self.response_dict.get(message.lower())
+        self.send_mesage(response)
+
     def change_chat(self):
         """
-        Bu fonksiyon, WhatsApp Web'de mevcut sohbeti değiştirmek için kullanılır. 
-        1. Kullanıcıdan yeni bir telefon numarası girmesi istenir ve kısa bir bekleme yapılır. 
-        2. Gelen son mesaj analiz edilerek yeni telefon numarası alınır. 
+        Bu fonksiyon, WhatsApp Web'de mevcut sohbeti değiştirmek için kullanılır.
+        1. Kullanıcıdan yeni bir telefon numarası girmesi istenir ve kısa bir bekleme yapılır.
+        2. Gelen son mesaj analiz edilerek yeni telefon numarası alınır.
         3. Sohbet arama alanı temizlenir, yeni numara yazılır ve ilgili sohbet açılır.
 
         Önemli Noktalar:
@@ -122,18 +133,17 @@ class WhatsAppAutomation:
 
     def send_GIF(self):
         """
-        Bu fonksiyon, WhatsApp Web üzerinden bir GIF göndermek için kullanılır.  
-        1. Kullanıcıdan GIF için bir anahtar kelime girmesi istenir.  
-        2. GIF seçme ve arama paneli açılır, anahtar kelimeyle ilgili GIF aranır.  
-        3. Uygun bir GIF seçilerek gönderilir.  
+        Bu fonksiyon, WhatsApp Web üzerinden bir GIF göndermek için kullanılır.
+        1. Kullanıcıdan GIF için bir anahtar kelime girmesi istenir.
+        2. GIF seçme ve arama paneli açılır, anahtar kelimeyle ilgili GIF aranır.
+        3. Uygun bir GIF seçilerek gönderilir.
 
-        Önemli Noktalar:  
-        - "gif" komutundan farklı bir mesaj geldiğinde anahtar kelime olarak kabul edilir.  
-        - XPATH değerleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.  
+        Önemli Noktalar:
+        - "gif" komutundan farklı bir mesaj geldiğinde anahtar kelime olarak kabul edilir.
+        - XPATH değerleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.
         """
         try:
             wait = WebDriverWait(self.driver, 20)
-
                                                                                                                                                                                              # Kullanıcıya GIF anahtar kelimesini girmesini iste
             GIF_keyword = None
 
@@ -176,14 +186,14 @@ class WhatsAppAutomation:
 
     def start(self):
         """
-        Bu fonksiyon, WhatsApp Web'e giriş yapıp belirli bir telefon numarasına ait sohbeti başlatır.  
-        1. WhatsApp Web'e gidilir ve giriş yöntemi telefon doğrulamasına alınır.  
-        2. Ülke kodu ve telefon numarası belirtilen alana girilir.  
-        3. Numara doğrulandıktan sonra, sohbet ekranında arama çubuğu kullanılarak ilgili kişi bulunur ve sohbet açılır.  
-        4. Sohbet açıldıktan sonra, gelen mesajları izlemek için `self.monitor_message()` çağrılır.  
+        Bu fonksiyon, WhatsApp Web'e giriş yapıp belirli bir telefon numarasına ait sohbeti başlatır.
+        1. WhatsApp Web'e gidilir ve giriş yöntemi telefon doğrulamasına alınır.
+        2. Ülke kodu ve telefon numarası belirtilen alana girilir.
+        3. Numara doğrulandıktan sonra, sohbet ekranında arama çubuğu kullanılarak ilgili kişi bulunur ve sohbet açılır.
+        4. Sohbet açıldıktan sonra, gelen mesajları izlemek için `self.monitor_message()` çağrılır.
 
-        Önemli Noktalar:  
-        - XPATH değerleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.  
+        Önemli Noktalar:
+        - XPATH değerleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.
         """
         self.driver.get("https://web.whatsapp.com/")
 
@@ -195,10 +205,10 @@ class WhatsAppAutomation:
         phone_number_selection.click()                                                                                                                                                       # Değişkene tıklanmasını sağladık.
 
         country_code_selection =wait.until(EC.visibility_of_element_located((By.XPATH,'//*[@id="app"]/div/div[2]/div[2]/div[1]/div/div/div[3]/div[1]/div[2]/div/div/div/form/input')))       # Ülke kodu yazma yerini XPATH'ını değişkene atadık.
-        country_code_selection.click()                                                                                                                                                       # Ülke kodu metin kutusunun tıklamasını sağladık. 
+        country_code_selection.click()                                                                                                                                                       # Ülke kodu metin kutusunun tıklamasını sağladık.
         country_code_selection.send_keys(Keys.CONTROL+"a")                                                                                                                                   # Ülke kodunun olduğu text boxun içindeki her şeyi seçtik.
         country_code_selection.send_keys(Keys.BACKSPACE)                                                                                                                                     # Ülke kodunun olduğu text boxun içindeki her şeyi sildik.
-        country_code_selection.send_keys(phone_number)                                                                                                                                       # telefon numarası yazılacak yerin içine ülke kodlu bir şekilde değişkene atadığımız telefon numarsını girdik. 
+        country_code_selection.send_keys(phone_number)                                                                                                                                       # telefon numarası yazılacak yerin içine ülke kodlu bir şekilde değişkene atadığımız telefon numarsını girdik.
 
 
         next_button_for_verification= wait.until(EC.visibility_of_element_located((By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/div[1]/div/div/div[3]/div[3]/button/div/div')))               # telefon numarası yazıldıktan sonra ileri tuşunun XPATH'ını değişkene atadık.
@@ -213,26 +223,26 @@ class WhatsAppAutomation:
 
     def monitor_message(self):
         """
-        Bu fonksiyon, WhatsApp Web'deki gelen mesajları sürekli izler ve belirli komutlara göre işlem yapar.  
-        
-        Fonksiyonun İşleyişi:  
-        1. HTML kaynağı alınarak gelen mesajlar analiz edilir.  
-        2. Son mesaj önceki mesajdan farklıysa işleme alınır:  
-           - `exit`: Sohbetten çıkılır ve "İyi Günler" mesajı gönderilir.  
-           - `help`: Kullanıcıya kullanılabilir komutlar gönderilir.  
-           - `not`: Not alma işlemi başlatılır.  
-           - `gif`: Belirtilen anahtar kelimeyle GIF gönderilir.  
-           - `change chat`: Sohbet değişikliği yapılır.  
-        3. Mesaj bulunmazsa veya başka bir mesaj gelirse döngü devam eder.  
-        
-        Önemli Noktalar:  
-        - XPATH değerleri ve sınıf isimleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.  
-        - Hata durumunda bir mesaj yazdırılır ve döngü sonlandırılır.  
+        Bu fonksiyon, WhatsApp Web'deki gelen mesajları sürekli izler ve belirli komutlara göre işlem yapar.
+
+        Fonksiyonun İşleyişi:
+        1. HTML kaynağı alınarak gelen mesajlar analiz edilir.
+        2. Son mesaj önceki mesajdan farklıysa işleme alınır:
+           - `exit`: Sohbetten çıkılır ve "İyi Günler" mesajı gönderilir.
+           - `help`: Kullanıcıya kullanılabilir komutlar gönderilir.
+           - `not`: Not alma işlemi başlatılır.
+           - `gif`: Belirtilen anahtar kelimeyle GIF gönderilir.
+           - `change chat`: Sohbet değişikliği yapılır.
+        3. Mesaj bulunmazsa veya başka bir mesaj gelirse döngü devam eder.
+
+        Önemli Noktalar:
+        - XPATH değerleri ve sınıf isimleri WhatsApp Web'in yapısına bağlıdır ve değişebilir.
+        - Hata durumunda bir mesaj yazdırılır ve döngü sonlandırılır.
         """
         while True:
             try:
                 html_source = self.driver.page_source                                                                                                                                        # Html kaynağını aldık
-                soup =BeautifulSoup(html_source, 'html.parser')                                                                                                                              # BeatifulSoup ile HTML'i analiz ettik 
+                soup =BeautifulSoup(html_source, 'html.parser')                                                                                                                              # BeatifulSoup ile HTML'i analiz ettik
                 message = soup.find_all('span', class_='_ao3e selectable-text copyable-text')                                                                                                # Gelen mesajları bulduk.
 
                 if message:                                                                                                                                                                  # Son yollanan mesajları alıyoruz.
@@ -242,28 +252,30 @@ class WhatsAppAutomation:
                         self.last_message = last_message_text
                         print("Yeni Mesaj:", self.last_message)
 
-                    elif self.last_message.lower() =="exit" or 1:                                                                                                                            # mesaj ile çıkmak için yol ekledik ve tekrar başladığında başka mesaj yoksa tekrar algılamaması için ve daha güzel durması için bir mesaj ekledik.   
+                    elif self.last_message.lower() =="exit":                                                                                                                            # mesaj ile çıkmak için yol ekledik ve tekrar başladığında başka mesaj yoksa tekrar algılamaması için ve daha güzel durması için bir mesaj ekledik.
                         self.send_mesage('iyi Günler \n')
                         break
 
-                    elif self.last_message.lower() == "help" or 2:                                                                                                                           # Kullanıcı metotları öğrensin diye help metodu ekledik.
+                    elif self.last_message.lower() == "help":                                                                                                                           # Kullanıcı metotları öğrensin diye help metodu ekledik.
                         self.send_mesage(self.help_message)
 
-                    elif self.last_message.lower() == "not" or 3:                                                                                                                            # Kullanıcı notlarını tutması için not metodu ekledik.
+                    elif self.last_message.lower() == "not":                                                                                                                            # Kullanıcı notlarını tutması için not metodu ekledik.
                         self.save_note_to_file()
-                    
-                    elif self.last_message.lower() == "gif" or 5:
+
+                    elif self.last_message.lower() == "gif":
                         self.send_GIF()
 
-
-                    elif self.last_message.lower() == "change chat" or 6:
+                    elif self.last_message.lower() == "change chat":
                         self.change_chat()
 
+                    elif self.last_message.lower() in self.response_dict:
+                        self.auto_reply(self.last_message)
+
                     else:
-                        time.sleep(5)
+                        time.sleep(3)
 
                 else:
-                    time.sleep(5)
+                    time.sleep(3)
 
             except Exception as e:
                     print(f"hata oluştu:{e}")
